@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone') {
+            steps {
+                git 'https://github.com/AiswariyaDash35/jenkins-ci-cd_pipeline.git'
+            }
+        }
+        stage('build and push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'dockerhub') {
+                        sh "docker build -t aiswariya35/fastapi-app:${env.BUILD_NUMBER} ."
+                        sh "docker push aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+        stage('run') {
+            steps {
+                script {
+                    sh "docker pull aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
+                    sh "docker rm -f api"
+                    sh "docker run -d -p 3000:7000 --name api aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
+                }
+            }
+        }
+    }
+}

@@ -2,27 +2,28 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone') {
+         stage('Clone') {
             steps {
                 git 'https://github.com/AiswariyaDash35/jenkins-ci-cd_pipeline.git'
             }
         }
-        stage('build and push') {
+        
+        stage('Build Docker Image') {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'dockerhub') {
-                        sh "docker build -t aiswariya35/fastapi-app:${env.BUILD_NUMBER} ."
-                        sh "docker push aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
-                    }
+                    // Build Docker image
+                    docker.build('fastapi-app:latest')
                 }
             }
         }
-        stage('run') {
+
+        stage('Push Docker Image') {
             steps {
                 script {
-                    sh "docker pull aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
-                    sh "docker rm -f api"
-                    sh "docker run -d -p 3000:7000 --name api aiswariya35/fastapi-app:${env.BUILD_NUMBER}"
+                    // Push the Docker image to a container registry
+                    docker.withRegistry('https://registry.example.com', 'dockerhubid') {
+                        docker.image('fastapi-app:latest').push()
+                    }
                 }
             }
         }
